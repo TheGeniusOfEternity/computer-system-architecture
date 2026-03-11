@@ -1,0 +1,23 @@
+; ========================
+; First Steps in Assembly
+; Architecture: acc32
+; ========================
+
+; Constants
+
+	.data
+
+input_addr: .word 0x80
+output_addr: .word 0x84
+
+	.text
+
+; Script
+
+_start:
+	load input_addr
+	load_acc and 0xFF
+	store output_addr
+halt:
+	halt
+
