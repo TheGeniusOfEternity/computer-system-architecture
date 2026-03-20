@@ -14,8 +14,8 @@ const_1:         .word  1                  ; counter step
 const_8:         .word  8                  ; constant step for increasing / decreasing shift values
 mask:            .word  0xFF               ; mask for specific byte substraction
 
-shr:             .word  24                 ; current value of right shift (0 -> 8 -> 16 -> 16)
-shl:             .word  0                  ; current value of left shift (24 -> 16 -> 8 -> 0)
+shr:             .word  24                 ; current value of right shift (24 -> 16 -> 8 -> 0)
+shl:             .word  0                  ; current value of left shift (0 -> 8 -> 16 -> 24)
 
 counter:         .word  4                  ; amount of unsubstracted bytes
 num:             .word  0                  ; input number
