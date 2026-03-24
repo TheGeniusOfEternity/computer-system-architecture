@@ -20,7 +20,7 @@ _start:
 	if not_positive		\ n:[]
 
 	dup			\ n:n:[]
-	-if prepare_sum		\ n:[]
+	-if prepare		\ n:[]
 	
 not_positive:
 	drop			\ :[]
@@ -30,34 +30,33 @@ _finish:
 	@p output_addr a! !     \ :[], A[]
    	halt
 
-prepare_sum:
-	dup			\ n:n:[]
-	lit 1			\ n:n:1:[]
-	and 			\ n:n&1:[]
+prepare:
+	dup			\ :n:n:[]
+	lit 1			\ 1:n:n:[]
+	and			\ 1&n:n:[]
 
-	if prepare_num		\ n:[]
-	
-	lit -1			\ n:-1:[]
+	if continue		\ n:[]
+
+	lit -1			\ -1:n:[]
 	+			\ n-1:[]
 
-prepare_num:
-	dup			\ sum:sum:[]
-	a!			\ sum:[], A[sum]
+continue:
+	2/			\ even_num/2:[]
+	dup			\ even_num/2:even_num/2:[]
+	lit 1			\ 1:k:k:[]
+	+			\ k+1:k:[]
+	a!			\ k:[], A[k+1]
 
-calc_loop:
-	a			\ sum:num:[]
-	lit -2			\ sum:num:-2:[]
-	+			\ sum:num-2:[]
-	
-	dup			\ sum:num-2:num-2:[]
-	-if update_sum		\ sum:num-2:[]
-	
-	a!			\ :[], A[sum]
+	multiply
+
 	_finish ;
+	
 
-update_sum:
-	dup			\ sum:new_num:new_num:[]
-	a!			\ sum:new_num:[], A[new_num]
-	+			\ sum+new_start:[]
-	calc_loop ;
- 
+multiply:
+	lit 0 			\ 0:k:[]
+	lit 31 >r		\ for R = 31	
+multiply_loop:
+	+*			
+	next multiply_loop
+	drop drop a		\ sum:[], A[]
+	;
