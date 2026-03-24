@@ -25,7 +25,6 @@ _start:
 not_positive:
 	drop			\ :[]
 	lit -1			\ -1:[]
-	a!			\ :[], A[-1]
 
 _finish:
 	@p output_addr a! !     \ :[], A[]
@@ -40,6 +39,7 @@ prepare_sum:
 	
 	lit -1			\ n:-1:[]
 	+			\ n-1:[]
+
 prepare_num:
 	dup			\ sum:sum:[]
 	a!			\ sum:[], A[sum]
