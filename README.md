@@ -4,6 +4,7 @@ Repository for ITMO CSA Labs about CPU models and architectures
 ### Main Contents
 1) Lab3 - Simple scripts implementations for different CPU models, such as:
    - ```acc32``` - _little to big endian_
+   - ```f32a``` - _sum even n_
    - ...
 
 2) Lab4 - ...
