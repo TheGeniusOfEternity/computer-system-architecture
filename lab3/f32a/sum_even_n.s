@@ -9,6 +9,7 @@
 
 input_addr:	.word	0x80
 output_addr:	.word 	0x84
+overflow_value:	.word	0xCCCCCCCC
 
 	.text
 
@@ -47,10 +48,15 @@ continue:
 	+			\ k+1:k:[]
 	a!			\ k:[], A[k+1]
 
-	multiply
+	multiply		\ sum:[]
+	dup			\ sum:sum:[]		
 
-	_finish ;
-	
+	-if _finish		\ sum:[]
+
+	drop			\ :[]
+	@p overflow_value	\ overflow_value:[]
+
+	_finish ;	
 
 multiply:
 	lit 0 			\ 0:k:[]

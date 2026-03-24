@@ -1,7 +1,7 @@
 limit: 2000
 memory_size: 0x90
 memory_mapped_io:
-  0x80: [90000]
+  0x80: [100000]
   0x84: []
 reports:
   - name: Step-by-step
@@ -15,4 +15,4 @@ reports:
       numio[0x84]: {io:0x84}
     assert: |
       numio[0x80]: [] >>> []
-      numio[0x84]: [] >>> [2025045000]
+      numio[0x84]: [] >>> [-858993460]
