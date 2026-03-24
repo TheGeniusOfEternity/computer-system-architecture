@@ -32,7 +32,7 @@ _finish:
     halt
 
 prepare:
-    dup                      \ :n:n:[]
+    dup                      \ n:n:[]
     lit 1                    \ 1:n:n:[]
     and                      \ 1&n:n:[]
 
