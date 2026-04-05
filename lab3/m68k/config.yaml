@@ -2,7 +2,7 @@ name: Format String
 limit: 1000
 memory_size: 0x1000
 memory_mapped_io:
-  0x80: ["d\n"]
+  0x80: ["Hey, I am %-5d years old!\n"]
   0x84: [] 
 reports:
   - name: Step-by-step
@@ -14,6 +14,8 @@ reports:
     view: |
       symio[0x80]: {io:0x80:sym}
       symio[0x84]: {io:0x84:sym}
+      numio[0x84]: {io:0x84:dec}
     assert: |
       symio[0x80]: "" >>> ""
-      symio[0x84]: "" >>> "-1"
+      symio[0x84]: "" >>> "?"
+      numio[0x84]: [] >>> [1]
