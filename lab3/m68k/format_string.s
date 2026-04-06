@@ -2,16 +2,19 @@
      ; Format String Script
      ; Architecture: m68k
      ; Recommended Configuration: config.yaml
-     ; ======================================    
+     ; ======================================
 
     .data
 
 input_addr:      .word  0x80
 output_addr:     .word  0x84
 
-input_buffer:    .word  0x300
-ph_buffer:       .word  0x400
-output_buffer:   .word  0x440
+input_buffer:    .word  0x400
+ph_buffer:       .word  0x500
+output_buffer:   .word  0x540
+
+plus_limit:      .byte  '2' , '1' , '4' , '7' , '4' , '8' , '3' , '6' , '4' , '7'
+minus_limit:     .byte  '2' , '1' , '4' , '7' , '4' , '8' , '3' , '6' , '4' , '8'
 
     .text
 
@@ -92,23 +95,87 @@ count_ph:
     jmp      check_ph                        ; goto next placeholder
 
 read_num:
+    cmp.b    0x00, D2                        ; compare amount of placeholders with 0
+    beq      check_end                       ; if amount of placeholders is 0 then goto check_end
     move.l   (A0), D0                        ; load current symbol
 
     cmp.b    0x0A, D0                        ; compare current symbol with "\n"
-    beq      num_end                         ; if current symbol was "\n" then goto num_end
+    beq      read_num_end                    ; if current symbol was "\n" then goto read_num_end
 
     move.l   D0, (A3)+                       ; copy symbol to buffer and increase current position in input_buffer
 
     jmp      read_num                        ; goto start of the loop
 
-num_end:
+read_num_end:
+    move.l   D0, (A3)+                       ; copy "\n" to input_buffer
     add.l    1, D3                           ; increment read nums count
 
-    cmp.b    D2, D3                          ; compare read nums count and placeholders count
+    cmp.l    D2, D3                          ; compare read nums count and placeholders count
     bne      read_num                        ; if read nums count != placeholders count then goto read_num
 
-read_end:
-    move.l   D3, (A1)
+prepare_check_num:
+    move.l   (A4)+, D0                       ; load "\n" after format_str or last num
+
+    cmp.b    0x00, D3                        ; compare D3 (amount of unchecked nums) with 0
+    beq      check_end                       ; if all nums were checked then goto check_end
+
+    move.l   0, D1                           ; clear D1, current num's digits counter
+    sub.l    1, D3                           ; decrement D3 (amount of unchecked nums)
+
+    movea.l  plus_limit, A5                  ; A5 <- address of plus_limit
+
+    cmp.b    0x2D, D0                        ; compare current symbol with "-"
+    bne      check_plus                      ; if current symbol is not "-" then goto digits iteration
+
+    movea.l  minus_limit, A5                 ; D5 <- address of minus_limit
+    jmp      check_digit
+
+check_plus:
+    move.l   -(A4), D0                       ; load "\n" after format_str or last num
+
+check_digit:
+    move.l   (A4)+, D0                       ; load current symbol from input_buffer
+    move.b   (A5)+, D5                       ; load current symbol from limit
+
+    cmp.b    0x0A, D0                        ; compare current symbol with "\n"
+    beq      check_num_end                   ; if current symbol is "\n" then goto check_num
+
+    add.l    1, D1                           ; increment digits count
+
+    cmp.b    0x39, D0                        ; compare current symbol with "9"
+    bgt      error                           ; if current symbol > "9" (lexically) then goto error
+
+    cmp.b    0x30, D0                        ; compare current symbol with "0"
+    blt      error                           ; if current symbol < "0" (lexically) then goto error
+    bne      compare_limit                   ; if current symbol is not "0" then goto compare_limit
+
+    cmp.b    0x01, D1                        ; compare D1 with 1
+    beq      error                           ; if D1 is 1, which means that first digit is zero, then goto error
+
+compare_limit:
+    cmp.b    D5, D0                          ; compare current symbol with limit symbol
+    blt      a1_less                         ; if D0 < D5 then goto a1_less
+    bgt      a1_greater                      ; if D0 > D5 then goto a1_greater
+
+    jmp      check_digit
+
+a1_less:
+    move.l   -1, D4
+    jmp      check_digit
+
+a1_greater:
+    move.l   1, D4
+    jmp      check_digit
+
+check_num_end:
+    cmp.b    0x0A, D1                        ; compare length of num with 10
+    blt      prepare_check_num               ; if num's length is less than 10, then goto next num
+    bgt      error                           ; if nums's length is greater than 10, then goto error
+
+    cmp.b    0x01, D4                        ; compare D4 with 1
+    beq      error                           ; if D4 is 1 then goto to error
+
+check_end:
 
 finish:
     halt
