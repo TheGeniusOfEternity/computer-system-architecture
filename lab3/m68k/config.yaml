@@ -2,7 +2,7 @@ name: Format String
 limit: 1000
 memory_size: 0x1000
 memory_mapped_io:
-  0x80: ["I did %52d validation!!!%-d%d\n2147483647\n-n2147483648\n12\n"]
+  0x80: ["Check it out! %4444\n2147483647\n"]
   0x84: [] 
 reports:
   - name: Step-by-step

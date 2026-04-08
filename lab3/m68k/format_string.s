@@ -32,9 +32,10 @@ _start:
     move.l   0, D3                           ; clear D3 (read nums count)
 
     movea.l  input_buffer, A2                ; A2 <- address of input_buffer
-    movea.l  (A2), A3                        ; A3 <- value of input_buffer, current position in input_buffer
+    movea.l  (A2), A3                        ; A3 <- value of input_buffer, current position in input_buffer (for input)
     movea.l  (A2), A4                        ; A4 <- value of input_buffer, nums pointer in input_buffer
     movea.l  (A2), A5                        ; A5 <- value of input_buffer, placeholder pointer in input_buffer
+    movea.l  (A2), A2                        ; A2 <- value of input_buffer, current position in input_buffer (for output)
 
 read_format_str:
     move.l   (A0), D0                        ; load current symbol
@@ -128,7 +129,7 @@ prepare_check_num:
     bne      check_plus                      ; if current symbol is not "-" then goto digits iteration
 
     movea.l  minus_limit, A5                 ; D5 <- address of minus_limit
-    jmp      check_digit
+    jmp      check_digit                     ; goto check_digit
 
 check_plus:
     move.l   -(A4), D0                       ; load "\n" after format_str or last num
@@ -157,15 +158,15 @@ compare_limit:
     blt      a1_less                         ; if D0 < D5 then goto a1_less
     bgt      a1_greater                      ; if D0 > D5 then goto a1_greater
 
-    jmp      check_digit
+    jmp      check_digit                     ; goto check_digit
 
 a1_less:
-    move.l   -1, D4
-    jmp      check_digit
+    move.l   -1, D4                          ; set D4 = -1 (D0 is less than D5)
+    jmp      check_digit                     ; goto check_digit
 
 a1_greater:
-    move.l   1, D4
-    jmp      check_digit
+    move.l   1, D4                           ; set D4 = -1 (D0 is greater than D5)
+    jmp      check_digit                     ; goto check_digit
 
 check_num_end:
     cmp.b    0x0A, D1                        ; compare length of num with 10
@@ -176,10 +177,91 @@ check_num_end:
     beq      error                           ; if D4 is 1 then goto to error
 
 check_end:
+    movea.l  input_buffer, A0                ; A0 <- address of input_buffer
+    move.l   (A0), D3                        ; reset D3 to start of format str
+    move.l   (A0), D4                        ; reset D4 to start of format str
+
+format_output:
+    movea.l  D3, A2                          ; load address to address register
+    move.l   (A2), D0                        ; load current symbol from input_buffer
+
+    add.l    0x04, D3                        ; increment address
+    add.l    0x04, D4                        ; increment address
+
+    cmp.b    0x0A, D0                        ; compare current symbol with "\n"
+    beq      finish                          ; if current symbol was "\n" then goto finish
+
+    cmp.b    0x25, D0                        ; compare current symbol with "%"
+    beq      confirm_ph                      ; if current symbol was "%" then goto confirm_ph
+
+    move.l   D0, (A1)                        ; write current symbol to output
+    jmp      format_output                   ; goto next iteration
+
+confirm_ph:
+    move.l   0x00, D1                        ; clear D1 - alignment direction flag
+    move.l   0x00, D2                        ; clear D2 - is placeholder invalid flag
+
+    movea.l  D4, A3                          ; load address to address register
+    move.l   (A3), D0                        ; load current symbol from input_buffer
+    add.l    0x04, D4                        ; increment address
+
+    cmp.b    0x2D, D0                        ; compare current symbol with "-"
+    bne      compute_offset                  ; if current symbol was not "-" then goto compute_offset
+
+    move.l   0x01, D1                        ; set alignment direction flag (before offset)
+
+    add.l    0x04, D4                        ; increment address (load next "d" or digit after "-")
+
+compute_offset:
+    movea.l  D4, A3                          ; load address to address register
+    move.l   (A3), D0                        ; load current symbol ("d" or digit)
+
+    cmp.b    0x30, D0                        ; compare current symbol with "0"
+    blt      confirm_ph_fail                 ; if current symbol < "0" (lexically) then goto next iteration
+
+    cmp.b    0x64, D0                        ; compare current symbol with "d"
+    beq      write_offset                    ; if current symbol was "d" then goto count_ph
+
+    cmp.b    0x39, D0                        ; compare current symbol with "9"
+    bgt      confirm_ph_fail                 ; if current symbol > "9" (lexically) then goto next iteration
+
+    add.l    0x04, D4                        ; increment address (load next "d" or digit)
+
+    jmp      compute_offset                  ; goto next digit
+
+confirm_ph_fail:
+    sub.l    0x04, D3                        ; decrement address
+    movea.l  D3, A2                          ; load address to address register
+
+    move.l   (A2), (A1)                      ; write current symbol to output
+    add.l    0x04, D3                        ; increment address
+
+    move.l   0x01, D2                        ; set placeholder is invalid flag = true
+    jmp      sync_check                      ; goto sync_check
+
+sync_check:
+    cmp.b    D3, D4                          ; compare A2 address with A3 address
+    beq      format_output                   ; if A2 == A3 then goto format_output
+
+    cmp.b    0x01, D2                        ; compare D2 with 1
+    beq      sync_A3                         ; if D2 == 1 (placeholder is invalid) then goto sync_A3
+
+    jmp      sync_A2                         ; goto sync_A2
+
+
+sync_A2:
+    add.l    0x04, D3                        ; increment address
+    jmp      sync_check                      ; goto sync_check
+
+sync_A3:
+    sub.l    0x04, D4                        ; decrement address
+    jmp      sync_check                      ; goto sync_check
+
+write_offset:
 
 finish:
-    halt
+    halt                                     ; stop program
 
 error:
-    move.l   -1, (A1)
-    jmp      finish
+    move.l   -1, (A1)                        ; write -1 to output
+    jmp      finish                          ; goto finish
