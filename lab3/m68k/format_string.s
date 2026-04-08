@@ -9,9 +9,7 @@
 input_addr:      .word  0x80
 output_addr:     .word  0x84
 
-input_buffer:    .word  0x400
-ph_buffer:       .word  0x500
-output_buffer:   .word  0x540
+input_buffer:    .word  0x500
 
 plus_limit:      .byte  '2' , '1' , '4' , '7' , '4' , '8' , '3' , '6' , '4' , '7'
 minus_limit:     .byte  '2' , '1' , '4' , '7' , '4' , '8' , '3' , '6' , '4' , '8'
@@ -27,14 +25,16 @@ _start:
     movea.l  output_addr, A1                 ; A1 <- address of output_addr
     movea.l  (A1), A1                        ; A1 <- value at output_addr
 
-    move.l   0, D1                           ; clear D1 (format str size counter)
-    move.l   0, D2                           ; clear D2 (placeholders count)
-    move.l   0, D3                           ; clear D3 (read nums count)
+    move.l   0x00, D1                        ; clear D1 (format str size counter)
+    move.l   0x00, D2                        ; clear D2 (placeholders count)
+    move.l   0x00, D3                        ; clear D3 (read nums count)
 
     movea.l  input_buffer, A2                ; A2 <- address of input_buffer
     movea.l  (A2), A3                        ; A3 <- value of input_buffer, current position in input_buffer (for input)
     movea.l  (A2), A4                        ; A4 <- value of input_buffer, nums pointer in input_buffer
     movea.l  (A2), A5                        ; A5 <- value of input_buffer, placeholder pointer in input_buffer
+    move.l   (A2), D6                        ; A5 <- value of input_buffer, placeholder pointer in input_buffer
+
     movea.l  (A2), A2                        ; A2 <- value of input_buffer, current position in input_buffer (for output)
 
 read_format_str:
@@ -61,6 +61,7 @@ check_size:
 
 check_ph:
     move.l   (A5)+, D0                       ; load symbol from buffer
+    add.l    0x04, D6                        ; increment address
 
     cmp.b    0x0A, D0                        ; compare current symbol with "\n"
     beq      read_num                        ; if current symbol was "\n" then goto read_num
@@ -69,10 +70,13 @@ check_ph:
     bne      check_ph                        ; if current symbol was not "%" then goto next iteration
 
     move.l   (A5)+, D0                       ; load symbol from buffer
+    add.l    0x04, D6                        ; increment address
+
     cmp.b    0x2D, D0                        ; compare current symbol with "-"
     bne      check_ph_digit                  ; if current symbol was not "-" then goto digits check
 
     move.l   (A5)+, D0                       ; load symbol ("d" or digit) after "-"
+    add.l    0x04, D6                        ; increment address
 
 check_ph_digit:
     cmp.b    0x30, D0                        ; compare current symbol with "0"
@@ -85,10 +89,12 @@ check_ph_digit:
     bgt      invalid_ph                      ; if current symbol > "9" (lexically) then goto next iteration
 
     move.l   (A5)+, D0                       ; load symbol ("d" or digit)
+    add.l    0x04, D6                        ; increment address
     jmp      check_ph_digit                  ; goto next digit
 
 invalid_ph:
     move.l   -(A5), D0                       ; load previous symbol
+    sub.l    0x04, D6                        ; increment address
     jmp      check_ph                        ; goto next placeholder
 
 count_ph:
@@ -128,7 +134,7 @@ prepare_check_num:
     cmp.b    0x2D, D0                        ; compare current symbol with "-"
     bne      check_plus                      ; if current symbol is not "-" then goto digits iteration
 
-    movea.l  minus_limit, A5                 ; D5 <- address of minus_limit
+    movea.l  minus_limit, A5                 ; A5 <- address of minus_limit
     jmp      check_digit                     ; goto check_digit
 
 check_plus:
@@ -180,6 +186,7 @@ check_end:
     movea.l  input_buffer, A0                ; A0 <- address of input_buffer
     move.l   (A0), D3                        ; reset D3 to start of format str
     move.l   (A0), D4                        ; reset D4 to start of format str
+    movea.l  D6, A5                          ; load address of nums start from D6 to A5
 
 format_output:
     movea.l  D3, A2                          ; load address to address register
@@ -198,18 +205,18 @@ format_output:
     jmp      format_output                   ; goto next iteration
 
 confirm_ph:
-    move.l   0x00, D1                        ; clear D1 - alignment direction flag
+    move.l   0x00, D1                        ; clear D1 - alignment direction flag (offset before num by default)
     move.l   0x00, D2                        ; clear D2 - is placeholder invalid flag
+    move.l   0x00, D5                        ; clear D5 - offset width
+    move.l   0x00, D6                        ; clear D6 - is num was written flag (by default false)
 
     movea.l  D4, A3                          ; load address to address register
     move.l   (A3), D0                        ; load current symbol from input_buffer
-    add.l    0x04, D4                        ; increment address
 
     cmp.b    0x2D, D0                        ; compare current symbol with "-"
     bne      compute_offset                  ; if current symbol was not "-" then goto compute_offset
 
-    move.l   0x01, D1                        ; set alignment direction flag (before offset)
-
+    move.l   0x01, D1                        ; set alignment direction flag (num before offset)
     add.l    0x04, D4                        ; increment address (load next "d" or digit after "-")
 
 compute_offset:
@@ -220,10 +227,14 @@ compute_offset:
     blt      confirm_ph_fail                 ; if current symbol < "0" (lexically) then goto next iteration
 
     cmp.b    0x64, D0                        ; compare current symbol with "d"
-    beq      write_offset                    ; if current symbol was "d" then goto count_ph
+    beq      write_num                       ; if current symbol was "d" then goto write_num
 
     cmp.b    0x39, D0                        ; compare current symbol with "9"
     bgt      confirm_ph_fail                 ; if current symbol > "9" (lexically) then goto next iteration
+
+    sub.l    0x30, D0                        ; convert 'number' to number
+    mul.l    0x10, D5                        ; multiply offset width by 10
+    add.l    D0, D5                          ; add current digit to offset width
 
     add.l    0x04, D4                        ; increment address (load next "d" or digit)
 
@@ -248,7 +259,6 @@ sync_check:
 
     jmp      sync_A2                         ; goto sync_A2
 
-
 sync_A2:
     add.l    0x04, D3                        ; increment address
     jmp      sync_check                      ; goto sync_check
@@ -257,7 +267,41 @@ sync_A3:
     sub.l    0x04, D4                        ; decrement address
     jmp      sync_check                      ; goto sync_check
 
+write_num:
+    cmp.b    0x00, D1                        ; compare D1 with 0 (check alignment direction)
+    beq      write_offset                    ; if alignment direction flag is not set then goto write_offset
+
+    move.l   (A5)+, D0                       ; load symbol of current num
+
+    cmp.b    0x0A, D0                        ; compare D0 with '\n'
+    beq      confirm_num                     ; if D0 == '\n' then goto confirm_num
+
+    move.l   D0, (A1)                        ; write symbol to the output
+    jmp      write_num                       ; goto next iteration
+
+confirm_num:
+    move.l   0x01, D6                        ; set num was written flag true
+    cmp.b    0x01, D1                        ; compare D1 with 1 (check alignment direction)
+    beq      write_offset                    ; if alignment direction flag is set then goto write_offset
+
+    add.l    0x04, D4                        ; decrement address
+    movea.l  D4, A3                          ; load address to address register
+    jmp      sync_check                      ; goto sync_check
+
 write_offset:
+    cmp.b    0x00, D5                        ; compare D5 with 0 (check remaining offset to write)
+    beq      confirm_offset                  ; if D5 == 0 then goto confirm_offset
+
+    move.l   0x20, (A1)                      ; write 'space' to the output
+    sub.l    0x01, D5                        ; decrement remaining offset width
+
+    jmp      write_offset                    ; goto next iteration
+
+confirm_offset:
+    move.l   0xFF, D1                        ; clear alignment direction flag
+    cmp.b    0x00, D6                        ; compare D6 with 0
+    beq      write_num                       ; if D6 == 0 (num was not written) then goto write_num
+    jmp      confirm_num                     ; goto confirm_num
 
 finish:
     halt                                     ; stop program
@@ -265,3 +309,4 @@ finish:
 error:
     move.l   -1, (A1)                        ; write -1 to output
     jmp      finish                          ; goto finish
+

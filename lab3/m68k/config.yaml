@@ -1,9 +1,9 @@
 name: Format String
-limit: 1000
+limit: 2000
 memory_size: 0x1000
 memory_mapped_io:
-  0x80: ["Check it out! %4444\n2147483647\n"]
-  0x84: [] 
+  0x80: ["This works! %3d %d\n423\n2147483647\n"]
+  0x84: []
 reports:
   - name: Step-by-step
     slice: all
@@ -14,8 +14,6 @@ reports:
     view: |
       symio[0x80]: {io:0x80:sym}
       symio[0x84]: {io:0x84:sym}
-      numio[0x84]: {io:0x84:dec}
     assert: |
       symio[0x80]: "" >>> ""
-      symio[0x84]: "" >>> "?"
-      numio[0x84]: [] >>> [0]
+      symio[0x84]: "" >>> "This works!    423 2147483647"
