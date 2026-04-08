@@ -109,8 +109,11 @@ read_num:
     beq      check_end                       ; if amount of placeholders is 0 then goto check_end
     move.l   (A0), D0                        ; load current symbol
 
-    cmp.b    0x0A, D0                        ; compare current symbol with "\n"
+    cmp.b    0x0A, D0                        ; compare current symbol with '\n'
     beq      read_num_end                    ; if current symbol was "\n" then goto read_num_end
+
+    cmp.b    0x2D, D0                        ; compare current symbol with '-'
+    beq      read_num_confirm                ; if current symbol is '-' then goto read_num_confirm
 
     cmp.b    0x39, D0                        ; compare current symbol with "9"
     bgt      error                           ; if current symbol > "9" (lexically) then goto error
@@ -118,6 +121,8 @@ read_num:
     cmp.b    0x30, D0                        ; compare current symbol with "0"
     blt      error                           ; if current symbol < "0" (lexically) then goto error
 
+
+read_num_confirm:
     move.l   D0, (A3)+                       ; copy symbol to buffer and increase current position in input_buffer
     add.l    0x01, D4                        ; increment length counter
 
