@@ -241,7 +241,7 @@ confirm_ph_fail:
     jmp      sync_check                      ; goto sync_check
 
 sync_check:
-    cmp.b    D3, D4                          ; compare A2 address with A3 address
+    cmp.l    D3, D4                          ; compare A2 address with A3 address
     beq      format_output                   ; if A2 == A3 then goto format_output
 
     cmp.b    0xFF, D5                        ; compare D5 with -1
@@ -269,7 +269,7 @@ evaluate_num:
     jmp      evaluate_num                    ; goto next iteration
 
 adjust_offset:
-    sub.l    D7, D5                          ; substact num's length from total offset
+    sub.l    D7, D5                          ; substract num's length from total offset
     cmp.b    0x00, D5                        ; compare D5 with 0
     bgt      write_num                       ; if D5 >= 0 (difference is non-negative) then goto write num
 
@@ -281,7 +281,7 @@ write_num:
     beq      write_offset                    ; if alignment direction flag is not set then goto write_offset
 
     move.l   (A5)+, D0                       ; load symbol of current num
-    add.l    0x04, D6                        ; increment address of curreте digits in nums
+    add.l    0x04, D6                        ; increment address of current digit in current num
 
     cmp.b    0x0A, D0                        ; compare D0 with '\n'
     beq      confirm_num                     ; if D0 == '\n' then goto confirm_num
