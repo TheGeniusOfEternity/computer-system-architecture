@@ -320,3 +320,4 @@ error:
     move.l   -1, (A1)                        ; write -1 to output
     jmp      finish                          ; goto finish
 
+
