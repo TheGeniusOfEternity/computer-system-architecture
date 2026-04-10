@@ -250,7 +250,7 @@ compute_offset:
     bgt      confirm_ph_fail                 ; if current symbol > "9" (lexically) then goto next iteration
 
     sub.l    0x30, D0                        ; convert 'number' to number
-    mul.l    0x10, D5                        ; multiply offset width by 10
+    mul.l    0x0A, D5                        ; multiply offset width by 10
     add.l    D0, D5                          ; add current digit to offset width
 
     add.l    0x04, D4                        ; increment address (load next "d" or digit)
@@ -294,7 +294,6 @@ evaluate_num:
     add.l    0x01, D7                        ; increment num's length
     add.l    0x04, D2                        ; increment address of current digit in current num
     jmp      evaluate_num                    ; goto next iteration
-
 
 adjust_offset:
     sub.l    D7, D5                          ; substact num's length from total offset

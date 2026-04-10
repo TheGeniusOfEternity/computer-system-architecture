@@ -2,7 +2,7 @@ name: Format String
 limit: 2000
 memory_size: 0x1000
 memory_mapped_io:
-  0x80: ["Negative %-4d\n-5\n"]
+  0x80: ["Large negative: %-15d\n-1000000000\n"]
   0x84: []
 reports:
   - name: Step-by-step
@@ -16,4 +16,4 @@ reports:
       symio[0x84]: {io:0x84:sym}
     assert: |
       symio[0x80]: "" >>> ""
-      symio[0x84]: "" >>> "Negative -5  "
+      symio[0x84]: "" >>> "Large negative: -1000000000    "
