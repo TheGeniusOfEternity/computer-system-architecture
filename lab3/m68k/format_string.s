@@ -165,8 +165,6 @@ check_digit:
     cmp.b    0x0A, D0                        ; compare current symbol with "\n"
     beq      check_num_end                   ; if current symbol is "\n" then goto check_num
 
-    add.l    1, D1                           ; increment digits count
-
     cmp.b    0x39, D0                        ; compare current symbol with "9"
     bgt      error                           ; if current symbol > "9" (lexically) then goto error
 
@@ -182,6 +180,7 @@ compare_limit:
     blt      a1_less                         ; if D0 < D5 then goto a1_less
     bgt      a1_greater                      ; if D0 > D5 then goto a1_greater
 
+    add.l    1, D1                           ; increment digits count
     jmp      check_digit                     ; goto check_digit
 
 a1_less:
