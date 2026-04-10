@@ -41,20 +41,20 @@ read_format_str:
     move.l   (A0), D0                        ; load current symbol
 
     cmp.b    0x0A, D0                        ; compare current symbol with "\n"
-    beq      check_size                      ; if current symbol was "\n" then goto check_size
+    beq      read_format_str_end             ; if current symbol was "\n" then goto read_format_str_end
 
     move.l   D0, (A3)+                       ; copy symbol to buffer and increase current position in input_buffer
     move.l   D0, (A4)+                       ; copy symbol to buffer and increase current position in input_buffer
     add.l    1, D1                           ; increase format str size
 
-    jmp      read_format_str                 ; goto start of the loop
-
-check_size:
-    cmp.l    0x00, D1                        ; compare format str size with 0
-    beq      error                           ; if D1 == 0 then goto error
-
     cmp.l    0x20, D1                        ; compare format str size with 32
     bgt      error                           ; if D1 > 32 then goto error
+
+    jmp      read_format_str                 ; goto start of the loop
+
+read_format_str_end:
+    cmp.l    0x00, D1                        ; compare format str size with 0
+    beq      error                           ; if D1 == 0 then goto error
 
     move.l   D0, (A3)+                       ; copy current symbol ("\n") to input buffer, now A3 points to nums start
     move.l   D0, (A4)+                       ; copy symbol to buffer and increase current position in input_buffer
