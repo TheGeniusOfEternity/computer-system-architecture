@@ -269,7 +269,7 @@ evaluate_num:
     jmp      evaluate_num                    ; goto next iteration
 
 adjust_offset:
-    sub.l    D7, D5                          ; substract num's length from total offset
+    sub.l    D7, D5                          ; subtract num's length from total offset
     cmp.b    0x00, D5                        ; compare D5 with 0
     bgt      write_num                       ; if D5 >= 0 (difference is non-negative) then goto write num
 
