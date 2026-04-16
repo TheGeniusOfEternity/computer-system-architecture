@@ -1,0 +1,21 @@
+name: Format String
+limit: 2000
+memory_size: 0x1000
+memory_mapped_io:
+  0x80: ["This format string is too long for input buffer %d\n1\n"]
+  0x84: []
+reports:
+  - name: Step-by-step
+    slice: all
+    view: |
+      {pc}:	{instruction}	{pc:label}
+  - name: Result
+    slice: last
+    view: |
+      symio[0x80]: {io:0x80:sym}
+      symio[0x84]: {io:0x84:sym}
+      numio[0x84]: {io:0x84:dec}
+    assert: |
+      symio[0x80]: "r input buffer %d\n1\n" >>> ""
+      symio[0x84]: "" >>> "?"
+      numio[0x84]: [] >>> [-1]
