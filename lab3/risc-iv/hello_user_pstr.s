@@ -5,7 +5,7 @@
      ; ======================================
 
      ; Used registers
-     ; a0 - read input data
+     ; a0 - read data (memory-mapped io / buffer)
      ; a1 - write output data
 
      ; t0 - memory pointer (ptr)
@@ -30,7 +30,7 @@ greeting:        .byte  'Hello, '
 
     .text
 
-    .org     0x200
+    .org     0x100
 
 _start:
     lui      a0, %hi(input_addr)             ; load the upper 20 bits of input_addr address
@@ -46,6 +46,7 @@ write_question:
     addi     t2, zero, 0x0A                  ; set '\n' as  stop symbol
 
     jal      ra, write_symbol_loop           ; call write_symbol_loop procedure
+    sb       t2, 0(a1)                       ; write '\n' symbol to output
 
 read_name:
     addi     t3, zero, 0x00                  ; reset name size counter to 0x00
@@ -56,6 +57,13 @@ read_name:
 
     jal      ra, read_symbol_loop            ; call read_symbol_loop procedure
 
+write_greeting:
+    addi     t0, zero, greeting              ; set ptr to greeting start
+    jal      ra, write_symbol_loop           ; call write_symbol_loop procedure
+
+    addi     t1, zero, 0x21                  ; set current symbol as '!'
+    sb       t1, 0(a1)                       ; write current symbol to output
+
 finish:
     halt                                     ; stop the program
 
@@ -64,14 +72,14 @@ overflow:
     addi     t0, t0, %lo(overflow_value)     ; load the lower 12 bits of overflow_value address & add them to previous 20
     lw       t0, 0(t0)                       ; load value by overflow_value address to t0
 
-    sw       t0, 0(a1)                       ; write overflow value to memory
+    sw       t0, 0(a1)                       ; write overflow value to buffer
     j        finish                          ; goto finish
 
     ; ------- Procedures --------
 
 read_symbol_loop:
     lb       t1, 0(a0)                       ; load current symbol from input
-    sb       t1, 0(t0)                       ; write current symbol to memory
+    sb       t1, 0(t0)                       ; write current symbol to buffer
 
     addi     t0, t0, 1                       ; increment ptr
     addi     t3, t3, 1                       ; increment name counter
@@ -84,9 +92,12 @@ read_symbol_loop:
     jr       ra                              ; return to pс stored in ra
 
 write_symbol_loop:
-    lb       t1, 0(t0)                       ; load current symbol from memory by ptr
-    sb       t1, 0(a1)                       ; write current symbol to output
-
+    lb       t1, 0(t0)                       ; load current symbol from data by ptr
     addi     t0, t0, 1                       ; increment ptr
-    bne      t1, t2, write_symbol_loop       ; compare current symbol with stop symbol, if not equal, continue writing
+
+    beq      t1, t2, write_symbol_loop_end   ; compare current symbol with stop symbol, if equal then stop writing
+    sb       t1, 0(a1)                       ; write current symbol to output
+    j        write_symbol_loop               ; goto write_symbol_loop
+
+write_symbol_loop_end:
     jr       ra                              ; return to pc stored in ra
