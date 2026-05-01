@@ -2,14 +2,13 @@ name: Hello user pstr
 limit: 2000
 memory_size: 0x1000
 memory_mapped_io:
-  0x80: ["name\n"]
+  0x80: ["Long edge suitable name\n"]
   0x84: []
 reports:
   - name: Step-by-step
     slice: all
     view: |
       {pc}:	{instruction}	{pc:label}
-      {T0} {T5}
   - name: Result
     slice: last
     view: |

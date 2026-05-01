@@ -15,7 +15,8 @@
      ; t3 - name size counter
      ; t4 - name size limit
 
-     ; t5 - max greeting size
+     ; t5 - buffer size
+     ; t6 - size of the greeting template
 
      ; ra - store programm counter
 
@@ -47,6 +48,7 @@ _start:
     addi     t3, zero, 0x00                  ; reset name size counter to 0x00
     addi     t4, zero, 0x17                  ; set max name size
     addi     t5, zero, 0x20                  ; set max greeting size
+    addi     t6, zero, 0x08                  ; set size of greeting template
 
 write_question:
     addi     t0, zero, question              ; set ptr to question start
@@ -70,8 +72,10 @@ fill_buffer:
 
 write_greeting:
     addi     t0, zero, greeting              ; set ptr to greeting start
-    addi     t0, t0, 0x01                    ; increment ptr to skip greeting size byte
+    add      t3, t3, t6                      ; add name size and template size
+    sb       t3, 0(t0)                       ; store greeting size to buffer
 
+    addi     t0, t0, 0x01                    ; increment ptr to skip greeting size byte
     jal      ra, write_symbol_loop           ; call write_symbol_loop procedure
 
 finish:
