@@ -1,5 +1,5 @@
      ; ======================================
-     ; Hellow User Pascal String Script
+     ; Hello User Pascal String Script
      ; Architecture: risc-iv
      ; Recommended Configuration: config.yaml
      ; ======================================
@@ -23,13 +23,13 @@
 
     .data
 
-greeting:        .byte  '?Hello, '
+buffer:          .byte  '?Hello, '
 question:        .byte  'What is your name?\n'
-
-overflow_value:  .word  0xFFFFFFFF
 
 input_addr:      .word  0x80
 output_addr:     .word  0x84
+
+overflow_value:  .word  0xCCCCCCCC
 
     .text
 
@@ -42,13 +42,13 @@ _start:
 
     lui      a1, %hi(output_addr)            ; load the upper 20 bits of output_addr address
     addi     a1, a1, %lo(output_addr)        ; load the lower 12 bits of output_addr address & add them to previous 20
-    lw       a1, 0(a1)                       ; load value from output_addr (0x84) to a0 register
+    lw       a1, 0(a1)                       ; load value from output_addr (0x84) to a1 register
 
     addi     t2, zero, 0x0A                  ; set '\n' as  stop symbol
     addi     t3, zero, 0x00                  ; reset name size counter to 0x00
     addi     t4, zero, 0x17                  ; set max name size
-    addi     t5, zero, 0x20                  ; set max greeting size
-    addi     t6, zero, 0x08                  ; set size of greeting template
+    addi     t5, zero, 0x20                  ; set max buffer size
+    addi     t6, zero, 0x08                  ; set size of buffer template
 
 write_question:
     addi     t0, zero, question              ; set ptr to question start
@@ -56,8 +56,8 @@ write_question:
     jal      ra, write_symbol_loop           ; call write_symbol_loop procedure
 
 read_name:
-    addi     t0, zero, greeting              ; set ptr to buffer start
-    addi     t0, t0, 0x08                    ; move ptr to skip first part of the greeting
+    addi     t0, zero, buffer                ; set ptr to buffer start
+    addi     t0, t0, 0x08                    ; move ptr to skip first part of the buffer
 
     jal      ra, read_symbol_loop            ; call read_symbol_loop procedure
 
@@ -71,11 +71,11 @@ fill_buffer:
     jal      ra, fill_buffer_loop            ; call fill_buffer_loop procedure
 
 write_greeting:
-    addi     t0, zero, greeting              ; set ptr to greeting start
+    addi     t0, zero, buffer                ; set ptr to buffer start
     add      t3, t3, t6                      ; add name size and template size
-    sb       t3, 0(t0)                       ; store greeting size to buffer
+    sb       t3, 0(t0)                       ; store buffer size to buffer
 
-    addi     t0, t0, 0x01                    ; increment ptr to skip greeting size byte
+    addi     t0, t0, 0x01                    ; increment ptr to skip buffer size byte
     jal      ra, write_symbol_loop           ; call write_symbol_loop procedure
 
 finish:
@@ -102,11 +102,12 @@ read_symbol_loop:
     addi     t0, t0, 1                       ; increment ptr
     addi     t3, t3, 1                       ; increment name counter
 
+    beq      t3, t4, overflow                ; compare read count with limit, if limit is equal then goto overflow
+
     j        read_symbol_loop                ; goto read_symbol_loop
 
 read_symbol_loop_end:
-    bgt      t3, t4, overflow                ; compare read count with limit, if limit is less then goto overflow
-    jr       ra                              ; return to pс stored in ra
+    jr       ra                              ; return to pc stored in ra
 
     ; ------- Write symbol -------
 
