@@ -18,7 +18,7 @@
      ; t5 - buffer size
      ; t6 - size of the greeting template
 
-     ; ra - store programm counter
+     ; ra - store program counter
 
 
     .data
@@ -57,7 +57,7 @@ write_question:
 
 read_name:
     addi     t0, zero, buffer                ; set ptr to buffer start
-    addi     t0, t0, 0x08                    ; move ptr to skip first part of the buffer
+    add      t0, t0, t6                      ; move ptr to skip first part of the buffer
 
     jal      ra, read_symbol_loop            ; call read_symbol_loop procedure
 
@@ -86,7 +86,7 @@ overflow:
     addi     t0, t0, %lo(overflow_value)     ; load the lower 12 bits of overflow_value address & add them to previous 20
     lw       t0, 0(t0)                       ; load value by overflow_value address to t0
 
-    sw       t0, 0(a1)                       ; write overflow value to buffer
+    sw       t0, 0(a1)                       ; write overflow value to output
     j        finish                          ; goto finish
 
     ; ------- Procedures --------
