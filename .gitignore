@@ -4,4 +4,8 @@
 *.swp
 *.swo
 
+# Ignore IDE files
 /.idea/
+
+# Ignore Mac OS files
+*.DS_Store
