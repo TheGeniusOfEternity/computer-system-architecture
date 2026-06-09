@@ -104,7 +104,11 @@ error_negative_n:
     nop                              / nop              / sw a0, 0(t1) / j finish
 
 overflow_detected:
-    ; overflow error
+    ; overflow error, read remaining input
+    nop                              / nop              / nop          / beqz t2, overflow_write_error
+    nop                              / addi t2, t2, -1  / lw a0, 0(t0) / j overflow_detected
+
+overflow_write_error:
     lui a0, %hi(error_ovf_code)      / nop              / nop          / nop
     addi a0, a0, %lo(error_ovf_code) / nop              / nop          / nop
     nop                              / nop              / lw a0, 0(a0) / nop
