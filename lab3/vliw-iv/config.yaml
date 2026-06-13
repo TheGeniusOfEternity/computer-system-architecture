@@ -8,6 +8,12 @@ reports:
     slice: all
     view: |
       {pc}: {instruction} {pc:label}
+  - name: Slot utilization
+    slice: last
+    view: |
+      vliw:load-percent:    {vliw:load-percent}
+      vliw:avg-load:        {vliw:avg-load}
+      vliw:bundles-by-load: {vliw:bundles-by-load}
   - name: Result
     slice: last
     view: |
