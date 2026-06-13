@@ -7,10 +7,10 @@ Repository for ITMO CSA Labs about CPU models and architectures
    - ```f32a``` - _[sum even n](lab3/f32a/sum_even_n.s)_
    - ```m68k``` - _[format string](lab3/m68k/format_string.s)_
    - ```risc-iv``` - _[hello user pstr](lab3/risc-iv/hello_user_pstr.s)_
-   - ...
+   - ```scheme``` - _[f32a](lab3/scheme)_
    - ```vliw-iv``` - _[sum and sum squares](lab3/vliw-iv/sum_and_sum_squares.s)_
 
-2) Lab4 - [half68k](https://github.com/TheGeniusOfEternity/half68k)
+2) Lab4 - _[half68k](https://github.com/TheGeniusOfEternity/half68k)_
 
 ### Tooling
 Lab3:
