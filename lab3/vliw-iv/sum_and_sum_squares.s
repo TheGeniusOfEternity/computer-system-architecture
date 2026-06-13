@@ -76,7 +76,6 @@ loop_start:
     sub a0, zero, a0                 / nop                           / nop          / nop
 
 loop_check:
-    ; check square overflow - if 46340 < x then x*x is overflow
     ; slot 1: (old_total ^ new_total) & (x ^ new_total)
     ; slot 2: add x*x to square_total
     ; slot 4: check if max number <= x
