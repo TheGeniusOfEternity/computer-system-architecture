@@ -14,18 +14,18 @@
      ; t5 - max number
      ; t6 - result of total check
 
-     ; a0   - current number / error code
-     ; a1   - square of current number
-     ; a2   - new total (before overflow check) sum
-     ; a3   - result of overflow check
-     ; a4   - temp result of XOR during sign overflow
-     ; a5   - new square_total (before overflow check) sum
-     ; a6   - module x (-x, if x < 0)
+     ; a0 - current number / error code
+     ; a1 - square of current number
+     ; a2 - new total (before overflow check) sum
+     ; a3 - result of overflow check
+     ; a4 - temp result of XOR during sign overflow
+     ; a5 - new square_total (before overflow check) sum
+     ; a6 - module x (-x, if x < 0)
 
     .data
 input_addr:      .word  0x80               ; input addr
 output_addr:     .word  0x84               ; output addr
-max_sqrt_val:    .word  0xB504              ; max x, those x*x will not occur overflow
+max_sqrt_val:    .word  0xB504             ; max x, those x*x will not occur overflow
 error_ovf_code:  .word  0xCCCCCCCC         ; overflow error code
 error_neg_code:  .word  0xFFFFFFFF         ; error code for incorrect input (negative N)
 
