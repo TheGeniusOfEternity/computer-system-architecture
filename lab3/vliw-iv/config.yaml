@@ -1,0 +1,24 @@
+limit: 2000
+memory_size: 0x1000
+memory_mapped_io:
+  0x80: [4, -2, 5, 0, -3]
+  0x84: []
+reports:
+  - name: Step-by-step
+    slice: all
+    view: |
+      {pc}: {instruction} {pc:label}
+  - name: Slot utilization
+    slice: last
+    view: |
+      vliw:load-percent:    {vliw:load-percent}
+      vliw:avg-load:        {vliw:avg-load}
+      vliw:bundles-by-load: {vliw:bundles-by-load}
+  - name: Result
+    slice: last
+    view: |
+      numio[0x80]: {io:0x80}
+      numio[0x84]: {io:0x84}
+    assert: |
+      numio[0x80]: [] >>> []
+      numio[0x84]: [] >>> [0,38]
